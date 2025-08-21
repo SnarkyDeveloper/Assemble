@@ -6,7 +6,7 @@ new string, example, "print ", doublequote, "yay newlines with escapes \\n", DOU
 
 class cats
     value cats.calico, "A calico cat is a domestic cat with a coat that is typically three colors: white, black, and orange.\n"
-    method grey, cat
+    method cat, grey
         print cats.calico
     end
 

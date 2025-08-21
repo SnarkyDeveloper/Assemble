@@ -394,9 +394,9 @@
 %endmacro
 
 %macro method 2
-    ; Usage: method <methodname>, <classname>
+    ; Usage: method <classname>, <methodname>
     ; alias of func pretty much
-    func %2.%1
+    func %1.%2
 %endmacro
 
 %macro value 2-*
