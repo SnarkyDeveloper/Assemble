@@ -4,24 +4,24 @@
 
 ; -- FUNCTIONS --
 
-    ; -- very cool macro :3 
-    %macro func 1
+; -- very cool macro :3 
+%macro func 1 ; ADD MULTI-PARAM FUNCTIONS. USE RUN MACRO TO RUN WITH PARAMS
     ; just to make it more readable
-        %ifidn %1, main():
-            section .text
-                global _start
-            _start:
-        %else
-            section .text
-            global %1
-            %1:
-        %endif
-    %endmacro
+    %ifidn %1, main():
+        section .text
+            global _start
+        _start:
+    %else
+        section .text
+        global %1
+        %1:
+    %endif
+%endmacro
 
-    %macro end 0
-        ; just to make it more readable
-        ret
-    %endmacro
+%macro end 0
+    ; just to make it more readable
+    ret
+%endmacro
 
 
 ; -- INTERNAL MACROS (For internal use mainly) --
@@ -53,7 +53,7 @@
 
 ; -- DECLARATIONS --
 
-%macro new 1-*
+%macro new 1-* ; add class support later
     ; usage:
     ;   new string myStr, "hello", " ", "world", NEWLINE
     ;   new byte   myByte, 1, 2, 3
@@ -305,6 +305,8 @@
 
 ; -- IN PROGRESS (file ops) --
 
+; TODO: If stdlib is implemented, move to function there in std
+
 %macro open 3
     ; Usage: open <buffer> <filename> <mode> 
     ; Opens a file with the specified mode and stores the file descriptor in <buffer>.
@@ -381,28 +383,76 @@
 ; -- Classes (WIP) --
 
 ; -- TODO: Implement class inheritance, `new class <classname>`, static and class methods --
+; Workarounds of how to implement classes in assembly
+; Create a helper macro to check if class exists before allowing to run, fail at compile time if not
+; Use a global variable to store class instances, and a method to create new instances
+
+
+; class storage
 
 %macro class 1
     ; Usage: class <classname>
+    ; Example: class MyClass
     ; Defines a new class with the given name.
+
+    %ifidn __CLASS_NAME__, %1
+        %error "Class '%1' is already defined"
+    %endif
+
     section .data
-    global %1
-    %1:
-        db "Class: ", `%1`, NEWLINE
-        db 0 ; null terminator for string
-    section .text
+    global CLASS_%1
+    CLASS_%1:
+        %define __CLASS_NAME__ %1
+        %define __CLASS_STORAGE__ CLASS_%1
 %endmacro
 
-%macro method 2
-    ; Usage: method <classname>, <methodname>
+%macro method 3
+    ; Usage: method <classname>, <methodname>, <static/clsMethod>
+    ; Example: method MyClass, myMethod, static
     ; alias of func pretty much
-    func %1.%2
+    
+    %define __METHOD_NAME__ %2
+    %define __METHOD_CLASS__ %1
+    %define __METHOD_TYPE__ %3
+    %define __METHOD_STORAGE__ CLASS_%1.%2
+    func CLASS_%1.%2
 %endmacro
 
 %macro value 2-*
     ; Usage: value <classname>.<valuename>, <value>
-    ; Alias of new for class values
-    new string, %1, %2
+    ; declare val as symbol
+
+    %ifidn __CLASS_NAME__, %1
+        %error "Class '%1' is not defined"
+    %endif
+    %ifidn __VALSYM__, %1
+        %if __VALNAME__, %2 ; check to make sure redefinition is not allowed
+            %error "Value '%2' is already defined in class '%1'"
+        %endif
+    %endif
+    %define __VALSYM__ %1
+    %define __VALNAME__ %2
+    %if %0 >= 2
+        %1:
+            %ifstr %2
+                escapeString %2
+            %else
+                db %2
+            %endif
+            %rotate 2
+            %rep %0-2
+                %ifstr %1
+                    escapeString %1
+                %else
+                    db %1
+                %endif
+                %rotate 1
+            %endrep
+        %1_len equ $ - %1
+    %else
+        %error "Not enough parameters for 'value'"
+    %endif
+
 %endmacro
 
 %macro run 2
@@ -411,6 +461,6 @@
     %ifidn %1, main
         call _start
     %else
-        call %1.%2
+        call CLASS_%1.%2
     %endif
 %endmacro
