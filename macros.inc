@@ -18,6 +18,8 @@
     %endif
 %endmacro
 
+; -- Loops --
+
 %macro for 2
     ; Usage: for <varname>, <count>
     new dword, %1, 0 ; create new var
@@ -33,7 +35,8 @@
         ; lp end
         inc eax
         mov [%1], eax
-        loop %1_loop
+        dec ecx
+        jnz %1_loop
     %elif %0 = 0
         ; func end
         ret
@@ -303,6 +306,39 @@
     int 80h
 %endmacro
 
+
+; -- Runtime Ifs --
+
+%macro mod 3
+    ; Usage: mod <var>, <val1> <val2>
+    ; Sets <var> to <val1> % <val2>
+    %ifndef %1
+        new dword, %1, 0
+    %endif
+
+    %ifidni %2, eax || %ifidni %2, ebx || %ifidni %2, ecx || %ifidni %2, edx
+        mov eax, %2
+    %else
+        mov eax, [%2]
+    %endif
+
+    xor edx, edx
+    mov ebx, %3
+    div ebx
+    mov [%1], edx
+%endmacro
+
+%macro if 2
+    ; Usage: if <var>, <val>
+    ; Doesn't use %if because that is compile-time
+    mov eax, [%1]
+    cmp eax, %2
+    jne %1_loop.endif_%1_%2
+%endmacro
+
+%macro endif 2
+    %1_loop.endif_%1_%2:
+%endmacro
 
 ; -- exit macro --
 %macro exit 1
