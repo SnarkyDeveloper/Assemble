@@ -18,9 +18,28 @@
     %endif
 %endmacro
 
-%macro end 0
-    ; just to make it more readable
-    ret
+%macro for 2
+    ; Usage: for <varname>, <count>
+    new dword, %1, 0 ; create new var
+    mov ecx, %2          ; iteration count
+    xor eax, eax         ; eax = loop var
+    mov [%1], eax        ; store init val
+%1_loop:
+%endmacro
+
+; %macro end 0
+%macro end 0-*
+    %if %0 = 1
+        ; lp end
+        inc eax
+        mov [%1], eax
+        loop %1_loop
+    %elif %0 = 0
+        ; func end
+        ret
+    %else
+        %error "Too many parameters for 'end' macro"
+    %endif
 %endmacro
 
 

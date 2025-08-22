@@ -10,9 +10,15 @@ class cats
         print cats.calico
     end
 
+func printHello
+    for hello, 5
+        print "Hello world ", newline
+        exit hello
+    end hello
+end
 func main():
     print "Code ran: \n", example, newline, newline
-
+    call printHello
     run cats, grey
     print "Called cat.grey function CLASSES YIPPIEEE\n"
     print "Output: \n"
