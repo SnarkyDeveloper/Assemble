@@ -22,10 +22,11 @@
 
 %macro for 2
     ; Usage: for <varname>, <count>
-    new dword, %1, 0 ; create new var
-    mov ecx, %2          ; iteration count
-    xor eax, eax         ; eax = loop var
-    mov [%1], eax        ; store init val
+    pusha ; save registers :3
+    new dword, %1, 0     ; loop var 
+    mov ecx, %2          ; iter count
+    xor eax, eax         ; clear eax for the loop start
+    mov [%1], eax        ; init loop
 %1_loop:
 %endmacro
 
@@ -37,6 +38,7 @@
         mov [%1], eax
         dec ecx
         jnz %1_loop
+        popa ; restore older registers YIPPIEEEE
     %elif %0 = 0
         ; func end
         ret
@@ -328,12 +330,18 @@
     mov [%1], edx
 %endmacro
 
-%macro if 2
-    ; Usage: if <var>, <val>
+%macro if 2-3
+    ; Usage: if <var>, <val>, mode (>, <, ==)
     ; Doesn't use %if because that is compile-time
     mov eax, [%1]
     cmp eax, %2
-    jne %1_loop.endif_%1_%2
+    %ifidni %3, ">"
+        jle %1_loop.endif_%1_%2
+    %elifidni %3, "<"
+        jge %1_loop.endif_%1_%2
+    %else
+        jne %1_loop.endif_%1_%2
+    %endif
 %endmacro
 
 %macro endif 2
@@ -358,82 +366,7 @@
     %endif
 %endmacro
 
-; -- IN PROGRESS (file ops) --
-
-; TODO: If stdlib is implemented, move to function there in std
-
-%macro open 3
-    ; Usage: open <buffer> <filename> <mode> 
-    ; Opens a file with the specified mode and stores the file descriptor in <buffer>.
-    pusha
-    %ifidn %3, read
-        mov eax, 5          ; sys_open
-        mov ebx, %2         ; filename
-        mov ecx, 0          ; O_RDONLY
-    %elifidn %3, write
-        mov eax, 5          ; sys_open
-        mov ebx, %2         ; filename
-        mov ecx, 1          ; O_WRONLY
-    %elifidn %3, readwrite
-        mov eax, 5          ; sys_open
-        mov ebx, %2         ; filename
-        mov ecx, 2          ; O_RDWR
-    %else
-        %error "Invalid mode for open macro. Use 'read', 'write', or 'readwrite'"
-    %endif
-    mov edx, 0            ; no special flags
-    int 80h               ; call kernel
-    mov [%1], eax         ; store file descriptor in buffer
-    popa
-%endmacro
-
-%macro dynamicAlloc 1
-    ; Usage: dynamicAlloc <fd>
-    ; Allocates memory dynamically and stores the file descriptor in <fd>.
-    pusha
-    mov eax, 45          ; sys_mmap
-    xor ebx, ebx         ; krnl choose addr
-    mov ecx, 4096        ; length = 4096 bytes
-    mov edx, 3           ; prot = PROT_READ | PROT_WRITE
-    mov esi, 34          ; flags = MAP_PRIVATE | MAP_ANONYMOUS
-    xor edi, edi         ; fd = -1 (no file)
-    xor ebp, ebp         ; offset = 0
-    int 80h              ; call kernel
-    mov [%1], eax        ; store allocated memory address in <fd>
-    popa
-%endmacro
-
-%macro read 2
-    ; Usage: read <fd> <buffer>
-    ; Reads data from file descriptor <fd> into <buffer>.
-    ; Recommended usage is with dynamicAlloc to allocate buffer first.
-    pusha
-    %ifidn __TYPE__, "imm"
-        %error "read macro does not support immediate values for file descriptor"
-    %endif
-
-    mov eax, 3          ; sys_read
-    mov ebx, %1         ; file descriptor
-    mov ecx, %2         ; buffer to read into
-    mov edx, 4096       ; number of bytes to read
-    int 80h             ; call kernel
-    popa
-%endmacro
-
-%macro close 1
-    ; Usage: close <fd>
-    ; Closes the file descriptor <fd>.
-    pusha
-    %ifidn __TYPE__, "imm"
-        %error "close macro does not support immediate values for file descriptor"
-    %endif
-
-    mov eax, 6          ; sys_close
-    mov ebx, %1         ; file descriptor
-    int 80h             ; call kernel
-    popa
-%endmacro
-
+; TODO: Add file i/o to my own std lib 
 
 ; -- Classes (WIP) --
 

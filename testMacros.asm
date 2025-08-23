@@ -9,6 +9,7 @@ class cats
     value cats.siamese, "A Siamese cat is a breed of domestic cat that is known for its striking blue almond-shaped eyes and short coat with color points on the ears, face, paws, and tail.\n"
     value cats.persian, "A Persian cat is a long-haired breed of cat characterized by its round face, short muzzle, and long, flowing coat.\n"
     value cats.tabby, "tabby kittie is sillie kitty :3\n"
+    
     method cats, grey, static
         print cats.calico
     end
