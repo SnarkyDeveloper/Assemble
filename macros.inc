@@ -11,6 +11,10 @@
         section .text
             global _start
         _start:
+    %elifidn %1, main
+        section .text
+            global _start
+        _start:
     %else
         section .text
         global %1
@@ -30,7 +34,27 @@
 %1_loop:
 %endmacro
 
-; %macro end 0
+
+; FIXME
+%macro while 2-3 ; uses same logic as if macro
+    ; Usage: while <var>, <val>, mode (>, <, ==)
+    ; MUST use `end` or `break` to end the loop
+    pusha
+    mov eax, [%1]
+    cmp eax, %2
+    %ifidni %3, ">"
+        jle %1_loop
+    %elifidni %3, "<"
+        jge %1_loop
+    %else
+        jne %1_loop
+    %endif
+%endmacro
+
+%macro break 0
+    jmp %1_loop.endif_%1_%2
+%endmacro
+
 %macro end 0-*
     %if %0 = 1
         ; lp end

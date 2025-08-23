@@ -22,6 +22,11 @@ class cats
     end
 
 func printHello
+    ; new dword, meow, 0
+    ; while meow, 5
+    ;     inc meow
+    ; end
+    ; TODO: fix while loops
     for hello, 5
         mod helloMod, hello, 5
         if helloMod, 0
