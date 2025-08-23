@@ -36,23 +36,34 @@
 
 
 ; FIXME
-%macro while 2-3 ; uses same logic as if macro
-    ; Usage: while <var>, <val>, mode (>, <, ==)
-    ; MUST use `end` or `break` to end the loop
+%macro while 2-3
+    new dword, %1, 0
     pusha
+    %1_loop:
     mov eax, [%1]
     cmp eax, %2
-    %ifidni %3, ">"
-        jle %1_loop
+    %if %0 = 2
+        ; default to ==
+        jne %1_loop_end
+    %elifidni %3, ">"
+        jle %1_loop_end
     %elifidni %3, "<"
-        jge %1_loop
+        jge %1_loop_end
     %else
-        jne %1_loop
+        jne %1_loop_end
     %endif
 %endmacro
 
-%macro break 0
-    jmp %1_loop.endif_%1_%2
+%macro endwhile 1
+    inc eax
+    mov [%1], eax
+    jmp %1_loop
+%1_loop_end:
+    popa
+%endmacro
+
+%macro break 1
+    jmp %1_loop_end
 %endmacro
 
 %macro end 0-*
