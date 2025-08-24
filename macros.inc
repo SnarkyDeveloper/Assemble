@@ -34,46 +34,46 @@
 %1_loop:
 %endmacro
 
-
-; FIXME
-%macro while 2-3
+%macro while 3
+    ; Usage: while <varname>, mode (>, <, ==), <value>
     new dword, %1, 0
     pusha
     %1_loop:
     mov eax, [%1]
-    cmp eax, %2
-    %if %0 = 2
-        ; default to ==
-        jne %1_loop_end
-    %elifidni %3, ">"
+    cmp eax, %3
+    ; default to ==
+    %ifidni %2, >
         jle %1_loop_end
-    %elifidni %3, "<"
+    %elifidni %2, <
         jge %1_loop_end
     %else
         jne %1_loop_end
     %endif
 %endmacro
 
-%macro endwhile 1
-    inc eax
-    mov [%1], eax
-    jmp %1_loop
-%1_loop_end:
-    popa
-%endmacro
-
 %macro break 1
     jmp %1_loop_end
 %endmacro
 
-%macro end 0-*
-    %if %0 = 1
-        ; lp end
-        inc eax
-        mov [%1], eax
-        dec ecx
-        jnz %1_loop
-        popa ; restore older registers YIPPIEEEE
+%macro end 0-2
+    ; Usage: end <loopType>, <varname> OR `end` to end a function
+    ; loopType is either 'for' or 'while'
+    %if %0 = 2
+        %ifidni %1, for
+            inc eax
+            mov [%2], eax
+            dec ecx
+            jnz %2_loop
+            popa ; YIPPIE RESTORE REGISTERS
+        %elifidni %1, while
+            inc eax
+            mov [%2], eax
+            jmp %2_loop
+        %2_loop_end:
+            popa
+        %else
+            %error "Unknown loop type for 'end' macro. Use 'for' or 'while'."
+        %endif
     %elif %0 = 0
         ; func end
         ret
@@ -365,17 +365,17 @@
     mov [%1], edx
 %endmacro
 
-%macro if 2-3
-    ; Usage: if <var>, <val>, mode (>, <, ==)
+%macro if 3
+    ; Usage: if <var>, mode (>, <, ==), <val>
     ; Doesn't use %if because that is compile-time
     mov eax, [%1]
-    cmp eax, %2
-    %ifidni %3, ">"
-        jle %1_loop.endif_%1_%2
-    %elifidni %3, "<"
-        jge %1_loop.endif_%1_%2
+    cmp eax, %3
+    %ifidni %2, >
+        jle %1_loop.endif_%1_%3
+    %elifidni %2, <
+        jge %1_loop.endif_%1_%3
     %else
-        jne %1_loop.endif_%1_%2
+        jne %1_loop.endif_%1_%3
     %endif
 %endmacro
 

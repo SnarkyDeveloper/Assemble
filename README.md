@@ -26,7 +26,7 @@ func printVar ; create a new function
         if number, 0 ; runtime ifs no need for compiler time!
             print "Divisible by 5 \n" ; WIP to convert ints to ascii chars, otherwise would be here!
         endif number, 0 ; end the if statement
-    end num ; auto ending for loops :)
+    end for, num ; auto ending for loops :)
 end ; automatically handles closing functions, sorry for the lua syntax lol
 
 func main ; start of main function

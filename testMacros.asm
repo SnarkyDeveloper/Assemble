@@ -1,5 +1,5 @@
 %include "map.inc"
-%include "macros.inc"
+%include "macros.asm"
 new string, outside, "This variable is defined outside any section", newline 
 new string, example, "print ", doublequote, "yay newlines with escapes \\n", doublequote
 
@@ -22,19 +22,18 @@ class cats
     end
 
 func printHello
-    while meow, 5, "<"
+    while meow, <, 5
         print "hi\n"
         break meow
         print "outside the break\n"
-    endwhile meow
+    end while, meow
     print "outside while loop\n"
-    ; TODO: fix while loops
     for hello, 5
         mod helloMod, hello, 5
-        if helloMod, 0
+        if helloMod, ==, 0
             print "yes five\n"
         endif helloMod, 0
-    end hello
+    end for, hello
 end
 func main():
     print "Code ran: \n", example, newline, newline
