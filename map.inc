@@ -2,6 +2,10 @@
 ; Ascii & Syscall mapings
 ; ===============================
 
+%ifndef MAP_INC
+%define MAP_INC
+; Ensure this file is only included once
+
 ; ASCII mappings
 
 
@@ -1045,3 +1049,5 @@
 
 %idefine sys_open_tree_attr                 467
 
+
+%endif ; MAP_INC

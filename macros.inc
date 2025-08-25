@@ -1,6 +1,9 @@
 ; MACROS FOR EASY ASSEMBLY PROGRAMMING
 
-; %define NEWLINE 0x0A
+%ifndef MACROS_INC
+%define MACROS_INC
+; Ensure this file is only included once
+
 
 ; -- FUNCTIONS --
 
@@ -317,6 +320,14 @@
     mov [%1], eax
 %endmacro
 
+; Reserve space on stack
+%macro reserve 2
+    ; Usage: reserve <bufname>, <numBytes>
+    section .bss
+        %1 resb %2
+    section .text
+%endmacro
+
 ; -- Print C-style string macro --
 %macro printC 1
     pusha
@@ -478,12 +489,14 @@
 
 %endmacro
 
-%macro run 2
-    ; Usage: run <classname>, <methodname>
+%macro run 1
+    ; Usage: run <classname>.<methodname>
     ; Calls a method of the class.
     %ifidn %1, main
         call _start
     %else
-        call CLASS_%1.%2
+        call CLASS_%1
     %endif
 %endmacro
+
+%endif

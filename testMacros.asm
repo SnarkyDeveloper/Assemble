@@ -1,5 +1,6 @@
 %include "map.inc"
-%include "macros.asm"
+%include "macros.inc"
+%include "std/filesystem.asm" ; filesystem class!
 new string, outside, "This variable is defined outside any section", newline 
 new string, example, "print ", doublequote, "yay newlines with escapes \\n", doublequote
 
@@ -35,17 +36,21 @@ func printHello
         endif helloMod, 0
     end for, hello
 end
-func main():
+func main
     print "Code ran: \n", example, newline, newline
     call printHello
-    run cats, grey
-    run cats, all
+    run cats.grey
+    run cats.all
     print "Called cat.grey function CLASSES YIPPIEEE\n"
     print "Output: \n"
     print "yay newlines with escapes \n"
     print outside
     new string, inside, "This variable was defined inside _start (.text) section :)", NEWLINE
     print inside
+    print "Filesystem test: \n"
+    run filesystem.getCwd
+    print "Current working directory: "
+    printC cwd
 
     new dword, firstArg, 0
     argv firstArg, 1
