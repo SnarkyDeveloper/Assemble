@@ -1,2 +1,3 @@
 Function Params
 More STD lib, add math lib next. 
+move end to just be end regardless, define a "in" variable to be checked to end
