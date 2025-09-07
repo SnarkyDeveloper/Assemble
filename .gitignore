@@ -1,6 +1,8 @@
+/*
+!/*.*
+*.o
 getpath.asm
 ewu-test/*
 output/*
 divis.asm
-*.o
 oldclasses.inc

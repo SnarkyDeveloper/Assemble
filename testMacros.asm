@@ -36,7 +36,25 @@ func printHello
         endif helloMod, 0
     end for, hello
 end
+
+func sayHello, name
+    getParam name, 0
+    print "Hello, "
+    print name
+    print "!\n"
+end
+
+; test param stuff manually 
+func test1
+    new string, s, "test1 param", newline
+    push s
+    call sayHello
+    print "Should have printed hello test1 param\n"
+    add esp, 4 ; clean up stack
+end
+
 func main
+    call test1
     print "Code ran: \n", example, newline, newline
     call printHello
     run cats.grey
@@ -51,12 +69,13 @@ func main
     run filesystem.getCwd
     print "Current working directory: "
     printC cwd
+    print newline
 
     new dword, firstArg, 0
     argv firstArg, 1
     print "First argument: "
     printC firstArg
-
+    print newline
     new int, exitStatus, 0
     random exitStatus, 1
     exit exitStatus

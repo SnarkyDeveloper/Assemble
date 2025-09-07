@@ -5,10 +5,19 @@
 ; Ensure this file is only included once
 
 
+; -- INTERNAL USE MACROS (Marked with __) --
+
+%macro __addVar 2 ; for classes later on, to define everything on a global scope so you can access outside macro only
+    ; Usage: N/a. Use new keyword instead
+    section .data
+        %1: dd %2
+    section .text
+%endmacro
+
 ; -- FUNCTIONS --
 
 ; -- very cool macro :3 
-%macro func 1 ; ADD MULTI-PARAM FUNCTIONS. USE RUN MACRO TO RUN WITH PARAMS
+%macro func 1-* ; ADD MULTI-PARAM FUNCTIONS. USE RUN MACRO TO RUN WITH PARAMS
     ; just to make it more readable
     %ifidn %1, main():
         section .text
@@ -18,18 +27,77 @@
         section .text
             global _start
         _start:
+
+    ; TODO: fix multiparam functions
+    ; IDEA: Create end_func label to jmp at end for both funcs multiparam or not
+    %elif %0 > 1
+        ; multiparam here. using cdecl
+        %ifdef endFunc 
+            %undef endFunc
+        %endif
+        section .data
+            global %1_PARAM_COUNT
+            %1_PARAM_COUNT: equ %0-1 ; remove funcname
+        section .text
+            global %1
+        %1:
+            %define endFunc %%endFunc ; so we can undef later
+            endFunc:
+                popad
+                ret
+            %%main:
+                pushad
+                ; user code here
+            ; params are at [esp + 4bit] 
+            ; call getParam to get specfic param
     %else
         section .text
-        global %1
+            global %1
         %1:
+            %define endFunc %%endFunc 
+            endFunc:
+                ret
+            %%main:
     %endif
+%endmacro
+
+%macro getParam 2
+    ; Usage: getParam <storeVar>, <paramIndex>
+    ; paramIndex starts from 0
+    %if %2 < 0
+        %error "Parameter index must be non-negative"
+    %endif
+    %ifndef %1
+        new dword, %1, 0
+    %endif
+    mov eax, [esp + 4 + (%2) * 4] ; esp+4 is ret addr, +4 per param
+    mov [%1], eax
+%endmacro
+
+%macro runFunc 1-*
+    ; Usage: runFunc <funcname>, <param1>, <param2>, ...
+    ; Calls a function with the given parameters.
+    %define __funcname %1
+    %if %0 > 1
+        %assign __i %0-1
+        %rep %0-1
+            push %{__i+1}
+            %assign __i __i-1
+        %endrep
+    %endif
+    call __funcname
+    %if %0 > 1
+        ; clean up stack (cdecl)
+        add esp, (%0-1)*4
+    %endif
+    %undef __funcname
 %endmacro
 
 ; -- Loops --
 
 %macro for 2
     ; Usage: for <varname>, <count>
-    pusha ; save registers :3
+    pushad ; save registers :3
     new dword, %1, 0     ; loop var 
     mov ecx, %2          ; iter count
     xor eax, eax         ; clear eax for the loop start
@@ -40,7 +108,7 @@
 %macro while 3
     ; Usage: while <varname>, mode (>, <, ==), <value>
     new dword, %1, 0
-    pusha
+    pushad
     %1_loop:
     mov eax, [%1]
     cmp eax, %3
@@ -67,19 +135,19 @@
             mov [%2], eax
             dec ecx
             jnz %2_loop
-            popa ; YIPPIE RESTORE REGISTERS
+            popad ; YIPPIE RESTORE REGISTERS
         %elifidni %1, while
             inc eax
             mov [%2], eax
             jmp %2_loop
         %2_loop_end:
-            popa
+            popad
         %else
             %error "Unknown loop type for 'end' macro. Use 'for' or 'while'."
         %endif
     %elif %0 = 0
         ; func end
-        ret
+        jmp endFunc
     %else
         %error "Too many parameters for 'end' macro"
     %endif
@@ -241,7 +309,7 @@
 
 ; --- Print macro ---
 %macro print 1-*
-    pusha
+    pushad
     %assign __i 1
     %rep %0
         %ifstr %1
@@ -274,7 +342,7 @@
         %rotate 1
         %assign __i __i+1
     %endrep
-    popa
+    popad
 %endmacro
 
 ; -- random number gen -- 
@@ -330,7 +398,7 @@
 
 ; -- Print C-style string macro --
 %macro printC 1
-    pusha
+    pushad
     mov eax, [%1]
     test eax, eax
     jz %%done
@@ -347,7 +415,7 @@
         mov ecx, [%1]
         int 80h
     %%done:
-    popa
+    popad
 %endmacro
 
 %macro syscall 0 ; just to map like x64 syscalls
